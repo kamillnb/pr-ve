@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Language } from "../i18n/translations";
 
 type ThemeMode = "light" | "dark";
@@ -25,6 +26,33 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [language, setLanguage] = useState<Language>("en");
   const [theme, setTheme] = useState<ThemeMode>("light");
+
+  useEffect(() => {
+    const load = async () => {
+      const [storedLang, storedTheme] = await Promise.all([
+        AsyncStorage.getItem("@memoryshare/lang"),
+        AsyncStorage.getItem("@memoryshare/theme"),
+      ]);
+
+      if (storedLang === "en" || storedLang === "no") {
+        setLanguage(storedLang);
+      }
+
+      if (storedTheme === "light" || storedTheme === "dark") {
+        setTheme(storedTheme);
+      }
+    };
+
+    load();
+  }, []);
+
+  useEffect(() => {
+    AsyncStorage.setItem("@memoryshare/lang", language);
+  }, [language]);
+
+  useEffect(() => {
+    AsyncStorage.setItem("@memoryshare/theme", theme);
+  }, [theme]);
 
   return (
     <SettingsContext.Provider

@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, Image, ScrollView } from "react-native";
 import { RouteProp, useRoute } from "@react-navigation/native";
 import { RootStackParamList } from "../navigation/RootNavigator";
 import { useMemories } from "../context/MemoriesContext";
+import { useSettings } from "../context/SettingsContext";
+import { t } from "../i18n/translations";
 
 type Route = RouteProp<RootStackParamList, "MemoryDetails">;
 
@@ -10,13 +12,15 @@ const MemoryDetailsScreen: React.FC = () => {
   const route = useRoute<Route>();
   const { id } = route.params;
   const { getMemoryById, tags } = useMemories();
+  const { language } = useSettings();
+  const tr = t(language);
 
   const memory = getMemoryById(id);
 
   if (!memory) {
     return (
       <View style={styles.center}>
-        <Text>Memory not found</Text>
+        <Text>{tr("noMemoryFound")}</Text>
       </View>
     );
   }
@@ -33,7 +37,7 @@ const MemoryDetailsScreen: React.FC = () => {
       <Text style={styles.date}>
         {new Date(memory.createdAt).toLocaleString()}
       </Text>
-      <Text style={styles.sectionTitle}>Tags</Text>
+      <Text style={styles.sectionTitle}>{tr("tags")}</Text>
       <View style={styles.tagsRow}>
         {memoryTags.map((tag) => (
           <View
@@ -44,7 +48,7 @@ const MemoryDetailsScreen: React.FC = () => {
           </View>
         ))}
       </View>
-      <Text style={styles.sectionTitle}>Location</Text>
+      <Text style={styles.sectionTitle}>{tr("locationStatus")}</Text>
       <Text>
         {memory.location.latitude.toFixed(4)},{" "}
         {memory.location.longitude.toFixed(4)}

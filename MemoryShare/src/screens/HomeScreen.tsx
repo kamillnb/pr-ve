@@ -11,24 +11,47 @@ import { RootStackParamList } from "../navigation/RootNavigator";
 type Nav = NativeStackNavigationProp<RootStackParamList, "Tabs">;
 
 const HomeScreen: React.FC = () => {
-  const { memories } = useMemories();
+  const { memories, tags } = useMemories();
   const { language } = useSettings();
   const tr = t(language);
   const [query, setQuery] = useState("");
   const nav = useNavigation<Nav>();
+
+  const tagLookup = useMemo(() => {
+    const map: Record<string, string> = {};
+    tags.forEach((tag) => {
+      map[tag.id] = tag.name.toLowerCase();
+    });
+    return map;
+  }, [tags]);
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase();
     return memories.filter(
       (m) =>
         m.title.toLowerCase().includes(q) ||
-        (m.description ?? "").toLowerCase().includes(q)
+        (m.description ?? "").toLowerCase().includes(q) ||
+        m.tags.some((tag) => tagLookup[tag]?.includes(q))
     );
-  }, [memories, query]);
+  }, [memories, query, tagLookup]);
+
+  const currentMonth = useMemo(() => {
+    const now = new Date();
+    return memories.filter((m) => {
+      const created = new Date(m.createdAt);
+      return (
+        created.getMonth() === now.getMonth() &&
+        created.getFullYear() === now.getFullYear()
+      );
+    }).length;
+  }, [memories]);
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>{tr("homeTitle")}</Text>
+      <Text style={styles.subheader}>
+        {tr("statsTitle")} · {currentMonth} {tr("statsMemories")}
+      </Text>
       <TextInput
         style={styles.search}
         placeholder={tr("searchPlaceholder")}
@@ -51,7 +74,8 @@ const HomeScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
-  header: { fontSize: 22, fontWeight: "bold", marginBottom: 12 },
+  header: { fontSize: 22, fontWeight: "bold", marginBottom: 4 },
+  subheader: { fontSize: 13, color: "#555", marginBottom: 8 },
   search: {
     borderWidth: 1,
     borderRadius: 8,
